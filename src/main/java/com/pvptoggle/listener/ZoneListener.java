@@ -94,9 +94,10 @@ public class ZoneListener implements Listener {
         } else if (wasInZone && !isInZone) {
             Player player = event.getPlayer();
             
-            // If cooldown is disabled (0), always send the message
+            // If cooldown is disabled (0), always send the messages
             if (cooldownMillis == 0) {
                 MessageUtil.send(player, "&a&l✓ You left the forced PvP zone.");
+                MessageUtil.sendActionBar(player, "&a&l✓ Safe Zone");
                 return;
             }
             
@@ -107,6 +108,7 @@ public class ZoneListener implements Listener {
             Long lastMessageTime = exitMessageCooldowns.get(playerId);
             if (lastMessageTime == null || (currentTime - lastMessageTime) >= cooldownMillis) {
                 MessageUtil.send(player, "&a&l✓ You left the forced PvP zone.");
+                MessageUtil.sendActionBar(player, "&a&l✓ Safe Zone");
                 exitMessageCooldowns.put(playerId, currentTime);
             }
         }
