@@ -137,8 +137,8 @@ public class PvPAdminCommand implements TabExecutor {
             return;
         }
         MessageUtil.send(sender, "&6&l══════ PvP Zones ══════");
-        for (PvPZone z : zones) {
-            MessageUtil.send(sender, "&7 • &f" + z.getName() + " &7(" + z.getWorldName() + ")");
+        for (PvPZone zone : zones) {
+            MessageUtil.send(sender, "&7 • &f" + zone.getName() + " &7(" + zone.getWorldName() + ")");
         }
     }
 
@@ -147,15 +147,15 @@ public class PvPAdminCommand implements TabExecutor {
             MessageUtil.send(sender, "&cUsage: /pvpadmin zone info <name>");
             return;
         }
-        PvPZone z = plugin.getZoneManager().getZone(args[2]);
-        if (z == null) {
+        PvPZone zone = plugin.getZoneManager().getZone(args[2]);
+        if (zone == null) {
             MessageUtil.send(sender, "&cZone '&f" + args[2] + "&c' not found.");
             return;
         }
-        MessageUtil.send(sender, "&6&l══════ Zone: " + z.getName() + " ══════");
-        MessageUtil.send(sender, "&7World: &f" + z.getWorldName());
-        MessageUtil.send(sender, "&7Corner 1: &f(" + z.getX1() + ", " + z.getY1() + ", " + z.getZ1() + ")");
-        MessageUtil.send(sender, "&7Corner 2: &f(" + z.getX2() + ", " + z.getY2() + ", " + z.getZ2() + ")");
+        MessageUtil.send(sender, "&6&l══════ Zone: " + zone.getName() + " ══════");
+        MessageUtil.send(sender, "&7World: &f" + zone.getWorldName());
+        MessageUtil.send(sender, "&7Corner 1: &f(" + zone.getX1() + ", " + zone.getY1() + ", " + zone.getZ1() + ")");
+        MessageUtil.send(sender, "&7Corner 2: &f(" + zone.getX2() + ", " + zone.getY2() + ", " + zone.getZ2() + ")");
     }
 
     @SuppressWarnings("deprecation")

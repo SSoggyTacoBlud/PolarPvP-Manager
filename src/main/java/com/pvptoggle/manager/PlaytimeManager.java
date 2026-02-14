@@ -25,7 +25,7 @@ public class PlaytimeManager {
         tickTask = new BukkitRunnable() {
             @Override
             public void run() {
-                tick();
+                updatePlayerTimesAndDebt();
             }
         }.runTaskTimer(plugin, 20L, 20L);
 
@@ -45,20 +45,20 @@ public class PlaytimeManager {
         if (saveTask != null) saveTask.cancel();
     }
 
-    private void tick() {
-        int onlineCount = Bukkit.getOnlinePlayers().size();
+    private void updatePlayerTimesAndDebt() {
+        int onlinePlayerCount = Bukkit.getOnlinePlayers().size();
         long cycleSeconds = plugin.getConfig().getInt("playtime.hours-per-cycle", 1) * 3600L;
         int forcedMinutes = plugin.getConfig().getInt("playtime.forced-minutes", 20);
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             PlayerData data = plugin.getPvPManager().getPlayerData(player.getUniqueId());
             data.setTotalPlaytimeSeconds(data.getTotalPlaytimeSeconds() + 1);
-            checkCycleMilestones(player, data, cycleSeconds, forcedMinutes);
-            tickDebt(player, data, onlineCount);
+            checkAndApplyCycleMilestones(player, data, cycleSeconds, forcedMinutes);
+            decrementPlayerDebt(player, data, onlinePlayerCount);
         }
     }
 
-    private void checkCycleMilestones(Player player, PlayerData data, long cycleSeconds, int forcedMinutes) {
+    private void checkAndApplyCycleMilestones(Player player, PlayerData data, long cycleSeconds, int forcedMinutes) {
         int currentCycles = (int) (data.getTotalPlaytimeSeconds() / cycleSeconds);
         if (currentCycles <= data.getProcessedCycles()) return;
 
@@ -74,10 +74,10 @@ public class PlaytimeManager {
         }
     }
 
-    private void tickDebt(Player player, PlayerData data, int onlineCount) {
+    private void decrementPlayerDebt(Player player, PlayerData data, int onlinePlayerCount) {
         if (data.getPvpDebtSeconds() <= 0 || player.hasPermission("pvptoggle.bypass")) return;
 
-        if (onlineCount >= 2) {
+        if (onlinePlayerCount >= 2) {
             data.setPvpDebtSeconds(data.getPvpDebtSeconds() - 1);
         }
 
@@ -86,7 +86,7 @@ public class PlaytimeManager {
             MessageUtil.send(player, "&a&l⚔ Your forced PvP period has ended!");
             MessageUtil.sendActionBar(player, "&a✓ Forced PvP ended");
         } else {
-            String status = (onlineCount >= 2)
+            String status = (onlinePlayerCount >= 2)
                     ? "&c⚔ Forced PvP"
                     : "&e⚔ Forced PvP &7(paused — solo)";
             MessageUtil.sendActionBar(player,

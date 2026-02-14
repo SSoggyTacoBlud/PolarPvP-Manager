@@ -25,19 +25,19 @@ public class PvPManager {
     }
 
     // grab or make player data
-    public PlayerData getPlayerData(UUID id) {
-        return playerDataMap.computeIfAbsent(id, k -> {
-            PlayerData d = new PlayerData();
-            d.setPvpEnabled(plugin.getConfig().getBoolean("default-pvp-state", false));
-            return d;
+    public PlayerData getPlayerData(UUID playerUuid) {
+        return playerDataMap.computeIfAbsent(playerUuid, k -> {
+            PlayerData data = new PlayerData();
+            data.setPvpEnabled(plugin.getConfig().getBoolean("default-pvp-state", false));
+            return data;
         });
     }
 
     // reset everything for a player
-    public void resetPlayerData(UUID id) {
-        PlayerData d = new PlayerData();
-        d.setPvpEnabled(plugin.getConfig().getBoolean("default-pvp-state", false));
-        playerDataMap.put(id, d);
+    public void resetPlayerData(UUID playerUuid) {
+        PlayerData data = new PlayerData();
+        data.setPvpEnabled(plugin.getConfig().getBoolean("default-pvp-state", false));
+        playerDataMap.put(playerUuid, data);
     }
 
     // for admin commands
@@ -79,14 +79,14 @@ public class PvPManager {
         for (String uuidStr : players.getKeys(false)) {
             try {
                 UUID uuid = UUID.fromString(uuidStr);
-                ConfigurationSection s = players.getConfigurationSection(uuidStr);
-                if (s == null) continue;
+                ConfigurationSection section = players.getConfigurationSection(uuidStr);
+                if (section == null) continue;
 
                 PlayerData data = new PlayerData();
-                data.setPvpEnabled(s.getBoolean("pvp-enabled", false));
-                data.setTotalPlaytimeSeconds(s.getLong("total-playtime-seconds", 0));
-                data.setProcessedCycles(s.getInt("processed-cycles", 0));
-                data.setPvpDebtSeconds(s.getLong("pvp-debt-seconds", 0));
+                data.setPvpEnabled(section.getBoolean("pvp-enabled", false));
+                data.setTotalPlaytimeSeconds(section.getLong("total-playtime-seconds", 0));
+                data.setProcessedCycles(section.getInt("processed-cycles", 0));
+                data.setPvpDebtSeconds(section.getLong("pvp-debt-seconds", 0));
                 playerDataMap.put(uuid, data);
             } catch (IllegalArgumentException e) {
                 plugin.getLogger().log(Level.WARNING,
@@ -100,11 +100,11 @@ public class PvPManager {
         YamlConfiguration config = new YamlConfiguration();
         for (Map.Entry<UUID, PlayerData> entry : playerDataMap.entrySet()) {
             String path = "players." + entry.getKey().toString();
-            PlayerData d = entry.getValue();
-            config.set(path + ".pvp-enabled",            d.isPvpEnabled());
-            config.set(path + ".total-playtime-seconds", d.getTotalPlaytimeSeconds());
-            config.set(path + ".processed-cycles",       d.getProcessedCycles());
-            config.set(path + ".pvp-debt-seconds",       d.getPvpDebtSeconds());
+            PlayerData data = entry.getValue();
+            config.set(path + ".pvp-enabled",            data.isPvpEnabled());
+            config.set(path + ".total-playtime-seconds", data.getTotalPlaytimeSeconds());
+            config.set(path + ".processed-cycles",       data.getProcessedCycles());
+            config.set(path + ".pvp-debt-seconds",       data.getPvpDebtSeconds());
         }
         try {
             config.save(new File(plugin.getDataFolder(), "playerdata.yml"));
