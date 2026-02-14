@@ -14,6 +14,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -25,9 +26,20 @@ public class ZoneListener implements Listener {
 
     private final PvPTogglePlugin plugin;
     private final Map<UUID, Long> exitMessageCooldowns = new HashMap<>();
+    private long cooldownMillis;
 
     public ZoneListener(PvPTogglePlugin plugin) {
         this.plugin = plugin;
+        updateCooldownFromConfig();
+    }
+    
+    /**
+     * Updates the cached cooldown value from the config.
+     * Should be called on initialization and when config is reloaded.
+     */
+    public void updateCooldownFromConfig() {
+        int cooldownSeconds = plugin.getConfig().getInt("zone-message-cooldown", 5);
+        this.cooldownMillis = cooldownSeconds * 1000L;
     }
 
     @EventHandler
@@ -84,10 +96,6 @@ public class ZoneListener implements Listener {
             UUID playerId = player.getUniqueId();
             long currentTime = System.currentTimeMillis();
             
-            // Get cooldown from config (in seconds, default 5)
-            int cooldownSeconds = plugin.getConfig().getInt("zone-message-cooldown", 5);
-            long cooldownMillis = cooldownSeconds * 1000L;
-            
             // Check if the player is on cooldown
             Long lastMessageTime = exitMessageCooldowns.get(playerId);
             if (lastMessageTime == null || (currentTime - lastMessageTime) >= cooldownMillis) {
@@ -95,6 +103,12 @@ public class ZoneListener implements Listener {
                 exitMessageCooldowns.put(playerId, currentTime);
             }
         }
+    }
+    
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        // Clean up cooldown data when player leaves to prevent memory leak
+        exitMessageCooldowns.remove(event.getPlayer().getUniqueId());
     }
 
     private boolean isZoneWand(ItemStack item) {
