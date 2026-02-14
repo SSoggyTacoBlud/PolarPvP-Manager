@@ -20,6 +20,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import com.pvptoggle.PvPTogglePlugin;
 import com.pvptoggle.model.PlayerData;
 import com.pvptoggle.model.PvPZone;
+import com.pvptoggle.util.CommandUtil;
+import com.pvptoggle.util.ConfigUtil;
 import com.pvptoggle.util.MessageUtil;
 
 // /pvpadmin wand | zone create/delete/list/info | player <name> info/reset/setdebt | reload
@@ -54,18 +56,10 @@ public class PvPAdminCommand implements TabExecutor {
     }
 
     private void handleWand(CommandSender sender) {
-        if (!(sender instanceof Player player)) {
-            MessageUtil.send(sender, PLAYERS_ONLY);
-            return;
-        }
+        Player player = CommandUtil.requirePlayer(sender, PLAYERS_ONLY);
+        if (player == null) return;
 
-        Material wandMat;
-        try {
-            String matConfig = plugin.getConfig().getString("zone-wand-material");
-            wandMat = Material.valueOf((matConfig != null ? matConfig : "BLAZE_ROD").toUpperCase());
-        } catch (IllegalArgumentException e) {
-            wandMat = Material.BLAZE_ROD;
-        }
+        Material wandMat = ConfigUtil.getWandMaterial(plugin.getConfig());
 
         ItemStack wand = new ItemStack(wandMat);
         ItemMeta meta = wand.getItemMeta();
@@ -101,10 +95,8 @@ public class PvPAdminCommand implements TabExecutor {
             MessageUtil.send(sender, "&cUsage: /pvpadmin zone create <name>");
             return;
         }
-        if (!(sender instanceof Player player)) {
-            MessageUtil.send(sender, PLAYERS_ONLY);
-            return;
-        }
+        Player player = CommandUtil.requirePlayer(sender, PLAYERS_ONLY);
+        if (player == null) return;
         String name = args[2];
         if (plugin.getZoneManager().getZone(name) != null) {
             MessageUtil.send(player, "&cA zone named '&f" + name + "&c' already exists.");
@@ -208,10 +200,8 @@ public class PvPAdminCommand implements TabExecutor {
 
     // temp test command - adds fake playtime so you don't have to wait an hour
     private void handleSimtime(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player player)) {
-            MessageUtil.send(sender, PLAYERS_ONLY);
-            return;
-        }
+        Player player = CommandUtil.requirePlayer(sender, PLAYERS_ONLY);
+        if (player == null) return;
         if (args.length < 2) {
             MessageUtil.send(sender, "&cUsage: /pvpadmin simtime <seconds>");
             return;

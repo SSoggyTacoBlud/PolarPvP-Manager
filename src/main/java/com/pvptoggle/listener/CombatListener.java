@@ -10,6 +10,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
 import com.pvptoggle.PvPTogglePlugin;
+import com.pvptoggle.util.DebugUtil;
 import com.pvptoggle.util.MessageUtil;
 
 public class CombatListener implements Listener {
@@ -28,18 +29,16 @@ public class CombatListener implements Listener {
         if (attacker == null) return;
         if (attacker.equals(victim)) return;
 
-        if (plugin.getConfig().getBoolean("debug", false)) {
-            plugin.getLogger().log(java.util.logging.Level.INFO, "[DEBUG] Combat: {0} -> {1} | damager type: {2}",
-                    new Object[]{attacker.getName(), victim.getName(), event.getDamager().getType()});
-        }
+        DebugUtil.logDebug(plugin.getConfig(), plugin.getLogger(),
+                "Combat: {0} -> {1} | damager type: {2}",
+                attacker.getName(), victim.getName(), event.getDamager().getType());
 
         boolean attackerPvP = plugin.getPvPManager().isEffectivePvPEnabled(attacker);
         boolean victimPvP   = plugin.getPvPManager().isEffectivePvPEnabled(victim);
 
-        if (plugin.getConfig().getBoolean("debug", false)) {
-            plugin.getLogger().log(java.util.logging.Level.INFO, "[DEBUG] Result: attackerPvP={0}, victimPvP={1}",
-                    new Object[]{attackerPvP, victimPvP});
-        }
+        DebugUtil.logDebug(plugin.getConfig(), plugin.getLogger(),
+                "Result: attackerPvP={0}, victimPvP={1}",
+                attackerPvP, victimPvP);
 
         if (!attackerPvP) {
             MessageUtil.send(attacker,

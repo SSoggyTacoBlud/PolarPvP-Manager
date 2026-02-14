@@ -1,7 +1,5 @@
 package com.pvptoggle.manager;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
@@ -14,6 +12,8 @@ import org.bukkit.entity.Player;
 
 import com.pvptoggle.PvPTogglePlugin;
 import com.pvptoggle.model.PlayerData;
+import com.pvptoggle.util.DebugUtil;
+import com.pvptoggle.util.YamlUtil;
 
 public class PvPManager {
 
@@ -52,10 +52,9 @@ public class PvPManager {
         boolean inZone = plugin.getZoneManager().isInForcedPvPZone(player.getLocation());
         boolean hasDebt = data.getPvpDebtSeconds() > 0 && !player.hasPermission("pvptoggle.bypass");
 
-        if (plugin.getConfig().getBoolean("debug", false)) {
-            plugin.getLogger().log(Level.INFO, "[DEBUG] PvP check for {0}: toggle={1}, inZone={2}, hasDebt={3}",
-                    new Object[]{player.getName(), toggle, inZone, hasDebt});
-        }
+        DebugUtil.logDebug(plugin.getConfig(), plugin.getLogger(),
+                "PvP check for {0}: toggle={1}, inZone={2}, hasDebt={3}",
+                player.getName(), toggle, inZone, hasDebt);
 
         return toggle || inZone || hasDebt;
     }
@@ -69,11 +68,7 @@ public class PvPManager {
     // playerdata.yml i/o
 
     public void loadData() {
-        File file = new File(plugin.getDataFolder(), "playerdata.yml");
-        if (!file.exists()) return;
-
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-        ConfigurationSection players = config.getConfigurationSection("players");
+        ConfigurationSection players = YamlUtil.loadSection(plugin.getDataFolder(), "playerdata.yml", "players");
         if (players == null) return;
 
         for (String uuidStr : players.getKeys(false)) {
@@ -106,10 +101,7 @@ public class PvPManager {
             config.set(path + ".processed-cycles",       d.getProcessedCycles());
             config.set(path + ".pvp-debt-seconds",       d.getPvpDebtSeconds());
         }
-        try {
-            config.save(new File(plugin.getDataFolder(), "playerdata.yml"));
-        } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to save player data", e);
-        }
+        YamlUtil.saveConfig(config, plugin.getDataFolder(), "playerdata.yml",
+                plugin.getLogger(), "Failed to save player data");
     }
 }

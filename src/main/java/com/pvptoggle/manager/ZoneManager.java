@@ -1,7 +1,5 @@
 package com.pvptoggle.manager;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,6 +16,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import com.pvptoggle.PvPTogglePlugin;
 import com.pvptoggle.model.PvPZone;
+import com.pvptoggle.util.YamlUtil;
 
 public class ZoneManager {
 
@@ -86,11 +85,7 @@ public class ZoneManager {
     // zones.yml i/o
 
     public void loadZones() {
-        File file = new File(plugin.getDataFolder(), "zones.yml");
-        if (!file.exists()) return;
-
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-        ConfigurationSection section = config.getConfigurationSection("zones");
+        ConfigurationSection section = YamlUtil.loadSection(plugin.getDataFolder(), "zones.yml", "zones");
         if (section == null) return;
 
         for (String key : section.getKeys(false)) {
@@ -121,10 +116,7 @@ public class ZoneManager {
             config.set(path + ".y2", z.getY2());
             config.set(path + ".z2", z.getZ2());
         }
-        try {
-            config.save(new File(plugin.getDataFolder(), "zones.yml"));
-        } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to save zones", e);
-        }
+        YamlUtil.saveConfig(config, plugin.getDataFolder(), "zones.yml",
+                plugin.getLogger(), "Failed to save zones");
     }
 }
