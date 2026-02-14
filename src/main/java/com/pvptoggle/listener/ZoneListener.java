@@ -1,5 +1,9 @@
 package com.pvptoggle.listener;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -20,6 +24,7 @@ import com.pvptoggle.util.MessageUtil;
 public class ZoneListener implements Listener {
 
     private final PvPTogglePlugin plugin;
+    private final Map<UUID, Long> exitMessageCooldowns = new HashMap<>();
 
     public ZoneListener(PvPTogglePlugin plugin) {
         this.plugin = plugin;
@@ -75,7 +80,20 @@ public class ZoneListener implements Listener {
             MessageUtil.send(event.getPlayer(), "&c&l⚔ You entered a forced PvP zone!");
             MessageUtil.sendActionBar(event.getPlayer(), "&c&l⚔ FORCED PVP ZONE ⚔");
         } else if (wasInZone && !isInZone) {
-            MessageUtil.send(event.getPlayer(), "&a&l✓ You left the forced PvP zone.");
+            Player player = event.getPlayer();
+            UUID playerId = player.getUniqueId();
+            long currentTime = System.currentTimeMillis();
+            
+            // Get cooldown from config (in seconds, default 5)
+            int cooldownSeconds = plugin.getConfig().getInt("zone-message-cooldown", 5);
+            long cooldownMillis = cooldownSeconds * 1000L;
+            
+            // Check if the player is on cooldown
+            Long lastMessageTime = exitMessageCooldowns.get(playerId);
+            if (lastMessageTime == null || (currentTime - lastMessageTime) >= cooldownMillis) {
+                MessageUtil.send(player, "&a&l✓ You left the forced PvP zone.");
+                exitMessageCooldowns.put(playerId, currentTime);
+            }
         }
     }
 
