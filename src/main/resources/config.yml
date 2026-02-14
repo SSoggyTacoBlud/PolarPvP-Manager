@@ -30,6 +30,9 @@ zone-wand-material: BLAZE_ROD
 # Set to 0 to disable cooldown
 zone-message-cooldown: 5
 
+# Apply cooldown to action bar messages too (false = action bar always shows, true = action bar uses cooldown)
+zone-cooldown-actionbar: false
+
 # Auto-save interval (minutes)
 save-interval: 5
 
