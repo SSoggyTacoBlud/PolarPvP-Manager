@@ -25,9 +25,10 @@ import com.pvptoggle.util.MessageUtil;
 public class ZoneListener implements Listener {
 
     private final PvPTogglePlugin plugin;
-    private final Map<UUID, Long> exitMessageCooldowns = new ConcurrentHashMap<>();
-    private long cooldownMillis;
-    private boolean cooldownAppliesActionBar;
+    private final Map<UUID, Long> chatExitCooldowns = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> actionbarExitCooldowns = new ConcurrentHashMap<>();
+    private long chatCooldownMillis;
+    private long actionbarCooldownMillis;
 
     public ZoneListener(PvPTogglePlugin plugin) {
         this.plugin = plugin;
@@ -35,13 +36,14 @@ public class ZoneListener implements Listener {
     }
     
     /**
-     * Updates the cached cooldown value from the config.
+     * Updates the cached cooldown values from the config.
      * Should be called on initialization and when config is reloaded.
      */
     public void updateCooldownFromConfig() {
-        int cooldownSeconds = plugin.getConfig().getInt("zone-message-cooldown", 5);
-        this.cooldownMillis = cooldownSeconds * 1000L;
-        this.cooldownAppliesActionBar = plugin.getConfig().getBoolean("zone-cooldown-actionbar", false);
+        int chatCooldownSeconds = plugin.getConfig().getInt("zone-exit-cooldowns.chat", 3);
+        int actionbarCooldownSeconds = plugin.getConfig().getInt("zone-exit-cooldowns.actionbar", 0);
+        this.chatCooldownMillis = chatCooldownSeconds * 1000L;
+        this.actionbarCooldownMillis = actionbarCooldownSeconds * 1000L;
     }
 
     @EventHandler
@@ -100,15 +102,15 @@ public class ZoneListener implements Listener {
             
             // Check if we should send chat message (with cooldown)
             boolean sendChatMessage = false;
-            if (cooldownMillis == 0) {
+            if (chatCooldownMillis == 0) {
                 // Cooldown disabled - always send chat message
                 sendChatMessage = true;
             } else {
                 // Check cooldown for chat message
-                Long lastMessageTime = exitMessageCooldowns.get(playerId);
-                if (lastMessageTime == null || (currentTime - lastMessageTime) >= cooldownMillis) {
+                Long lastChatTime = chatExitCooldowns.get(playerId);
+                if (lastChatTime == null || (currentTime - lastChatTime) >= chatCooldownMillis) {
                     sendChatMessage = true;
-                    exitMessageCooldowns.put(playerId, currentTime);
+                    chatExitCooldowns.put(playerId, currentTime);
                 }
             }
             
@@ -117,14 +119,22 @@ public class ZoneListener implements Listener {
                 MessageUtil.send(player, "&a&l✓ You left the forced PvP zone.");
             }
             
-            // Action bar - check if cooldown should apply
-            if (cooldownAppliesActionBar) {
-                // Action bar uses cooldown - only send if chat was sent
-                if (sendChatMessage) {
-                    MessageUtil.sendActionBar(player, "&a&l✓ You left the forced PvP zone.");
-                }
+            // Check if we should send action bar message (with cooldown)
+            boolean sendActionBarMessage = false;
+            if (actionbarCooldownMillis == 0) {
+                // Cooldown disabled - always send action bar message
+                sendActionBarMessage = true;
             } else {
-                // Action bar always shows (default behavior)
+                // Check cooldown for action bar message
+                Long lastActionBarTime = actionbarExitCooldowns.get(playerId);
+                if (lastActionBarTime == null || (currentTime - lastActionBarTime) >= actionbarCooldownMillis) {
+                    sendActionBarMessage = true;
+                    actionbarExitCooldowns.put(playerId, currentTime);
+                }
+            }
+            
+            // Send action bar message if allowed
+            if (sendActionBarMessage) {
                 MessageUtil.sendActionBar(player, "&a&l✓ You left the forced PvP zone.");
             }
         }
@@ -133,7 +143,9 @@ public class ZoneListener implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         // Clean up cooldown data when player leaves to prevent memory leak
-        exitMessageCooldowns.remove(event.getPlayer().getUniqueId());
+        UUID playerId = event.getPlayer().getUniqueId();
+        chatExitCooldowns.remove(playerId);
+        actionbarExitCooldowns.remove(playerId);
     }
 
     private boolean isZoneWand(ItemStack item) {
