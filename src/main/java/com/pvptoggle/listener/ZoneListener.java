@@ -82,10 +82,10 @@ public class ZoneListener implements Listener {
 
     private boolean isZoneWand(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) return false;
-        
+
         Material wandMat = ConfigUtil.getWandMaterial(plugin.getConfig());
         if (item.getType() != wandMat) return false;
-        
+
         if (!item.hasItemMeta()) return false;
         ItemMeta meta = item.getItemMeta();
         if (meta == null || !meta.hasDisplayName()) return false;

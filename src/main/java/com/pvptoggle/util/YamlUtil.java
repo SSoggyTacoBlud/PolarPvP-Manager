@@ -17,7 +17,7 @@ public final class YamlUtil {
      * @param dataFolder The plugin data folder
      * @param filename The name of the YAML file
      * @param sectionKey The configuration section key to retrieve
-     * @return The ConfigurationSection or null if file doesn't exist, section doesn't exist, or there's an error
+     * @return The ConfigurationSection or null if file doesn't exist or section doesn't exist
      */
     public static ConfigurationSection loadSection(File dataFolder, String filename, String sectionKey) {
         File file = new File(dataFolder, filename);
