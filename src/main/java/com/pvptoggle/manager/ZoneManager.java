@@ -58,8 +58,10 @@ public class ZoneManager {
         if (world == null) {
             return "null:0:0:0"; // Fallback for null worlds
         }
-        return new StringBuilder(64)
-            .append(world.getName())
+        String worldName = world.getName();
+        // Pre-allocate capacity: world name + 3 colons + up to 36 chars for coordinates (3 * 11-digit ints)
+        return new StringBuilder(worldName.length() + 36)
+            .append(worldName)
             .append(':')
             .append(loc.getBlockX())
             .append(':')
@@ -118,11 +120,16 @@ public class ZoneManager {
     }
 
     public Collection<PvPZone> getZones() {
-        return Collections.unmodifiableCollection(zones.values());
+        synchronized (saveLock) {
+            return Collections.unmodifiableCollection(new java.util.ArrayList<>(zones.values()));
+        }
     }
 
     public Set<String> getZoneNames() {
-        return Collections.unmodifiableSet(zones.keySet());
+        synchronized (saveLock) {
+            return Collections.unmodifiableSet(
+                    new java.util.LinkedHashSet<>(zones.keySet()));
+        }
     }
 
     public boolean isInForcedPvPZone(Location location) {

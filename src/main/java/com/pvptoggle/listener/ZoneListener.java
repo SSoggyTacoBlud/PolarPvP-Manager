@@ -56,6 +56,7 @@ public class ZoneListener implements Listener {
                     + actionbarCooldownSeconds + "); using 0 instead.");
             actionbarCooldownSeconds = 0;
         }
+        
         this.chatCooldownMillis = chatCooldownSeconds * 1000L;
         this.actionbarCooldownMillis = actionbarCooldownSeconds * 1000L;
     }
@@ -133,13 +134,22 @@ public class ZoneListener implements Listener {
     }
 
     private boolean isCooldownReady(Map<UUID, Long> cooldownMap, UUID playerId, long cooldownMillis, long currentTime) {
-        if (cooldownMillis == 0) return true; // Early return when cooldown is disabled
-        Long lastTime = cooldownMap.get(playerId);
-        if (lastTime == null || (currentTime - lastTime) >= cooldownMillis) {
-            cooldownMap.put(playerId, currentTime);
+        // Early return when cooldown is disabled to avoid unnecessary map operations
+        if (cooldownMillis == 0) {
             return true;
         }
-        return false;
+        
+        // Atomic check-and-update to avoid race conditions
+        final java.util.concurrent.atomic.AtomicBoolean shouldSend = new java.util.concurrent.atomic.AtomicBoolean(false);
+        cooldownMap.compute(playerId, (id, lastTime) -> {
+            if (lastTime == null || (currentTime - lastTime) >= cooldownMillis) {
+                shouldSend.set(true);
+                return currentTime; // Update the timestamp
+            }
+            return lastTime; // Keep the old timestamp
+        });
+        
+        return shouldSend.get();
     }
 
     private boolean isZoneWand(ItemStack item) {
